@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Innovation Hub</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background-color: #f0fdfa; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        .nav { background: white; box-shadow: 0 1px 3px rgba(20, 184, 166, 0.1); padding: 15px 0; margin-bottom: 30px; }
+        .nav-content { display: flex; justify-content: space-between; align-items: center; }
+        .nav-links { display: flex; gap: 20px; align-items: center; }
+        .btn { padding: 10px 20px; border: none; border-radius: 12px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.3s; letter-spacing: 0.5px; }
+        .btn-primary { background: linear-gradient(135deg, #14b8a6 0%, #2dd4bf 100%); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(20, 184, 166, 0.3); }
+        .btn-secondary { background-color: #ccfbf1; color: #134e4a; border: 2px solid #14b8a6; }
+        .btn-secondary:hover { background-color: #14b8a6; color: white; }
+        .card { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 2px 8px rgba(20, 184, 166, 0.1); margin-bottom: 20px; border: 1px solid #ccfbf1; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #134e4a; }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 12px; border: 2px solid #ccfbf1; border-radius: 10px; font-size: 14px; transition: border-color 0.3s; }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: #14b8a6; outline: none; }
+        .form-group textarea { resize: vertical; min-height: 100px; }
+        .idea-card { border: 1px solid #ccfbf1; border-radius: 16px; padding: 24px; margin-bottom: 20px; background: white; transition: all 0.3s; box-shadow: 0 2px 8px rgba(20, 184, 166, 0.1); }
+        .idea-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(20, 184, 166, 0.2); border-color: #14b8a6; }
+        .idea-title { font-size: 20px; font-weight: 700; color: #134e4a; margin-bottom: 8px; }
+        .idea-meta { display: flex; gap: 15px; font-size: 12px; color: #64748b; margin-bottom: 12px; }
+        .idea-description { color: #545454; line-height: 1.7; margin-bottom: 16px; font-size: 15px; }
+        .idea-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+        .tag { background-color: #ccfbf1; color: #134e4a; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+        .idea-actions { display: flex; gap: 20px; align-items: center; }
+        .action-btn { background: none; border: none; color: #64748b; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 14px; transition: all 0.3s; }
+        .action-btn:hover { color: #14b8a6; transform: scale(1.1); }
+        .action-btn.liked { color: #f43f5e; }
+        .loading { text-align: center; padding: 40px; color: #64748b; }
+        .error { background-color: #fef2f2; border: 1px solid #fecaca; color: #dc2626; padding: 15px; border-radius: 12px; margin-bottom: 20px; }
+        .success { background-color: #f0fdf4; border: 1px solid #bbf7d0; color: #16a34a; padding: 15px; border-radius: 12px; margin-bottom: 20px; }
+        .user-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #14b8a6 0%, #2dd4bf 100%); display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: white; }
+        .user-info { display: flex; align-items: center; gap: 12px; }
+        .nav-link { background: none; border: none; color: #134e4a; cursor: pointer; font-weight: 600; transition: all 0.3s; padding: 8px 16px; border-radius: 8px; }
+        .nav-link:hover { background-color: #ccfbf1; color: #14b8a6; }
+        .nav-link.active { background-color: #14b8a6; color: white; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        
+        // Demo Data
+        const demoUsers = [
+            {
+                _id: 'user1',
+                username: 'demo_user',
+                email: 'demo@example.com',
+                password: 'demo123',
+                profile: {
+                    bio: 'Demo user for testing',
+                    skills: ['JavaScript', 'React', 'Node.js']
+                }
+            }
+        ];
+
+        const demoIdeas = [
+            {
+                _id: 'idea1',
+                title: 'AI-Powered Learning Platform',
+                description: 'An intelligent learning platform that adapts to individual learning styles and provides personalized content recommendations.',
+                category: 'Technology',
+                tags: ['AI', 'Education', 'Machine Learning'],
+                author: demoUsers[0],
+                collaboration: {
+                    seekingCollaborators: true,
+                    requiredSkills: ['React', 'Python', 'AI/ML']
+                },
+                stats: {
+                    likes: [],
+                    comments: 3,
+                    views: 45
+                },
+                createdAt: new Date('2024-01-15')
+            },
+            {
+                _id: 'idea2',
+                title: 'Sustainable Urban Farming',
+                description: 'A community-driven urban farming initiative that uses vertical farming techniques to grow fresh produce in cities.',
+                category: 'Environment',
+                tags: ['Sustainability', 'Urban Farming', 'Community'],
+                author: demoUsers[0],
+                collaboration: {
+                    seekingCollaborators: true,
+                    requiredSkills: ['Agriculture', 'Business', 'Marketing']
+                },
+                stats: {
+                    likes: [],
+                    comments: 5,
+                    views: 67
+                },
+                createdAt: new Date('2024-01-20')
+            },
+            {
+                _id: 'idea3',
+                title: 'Healthcare Accessibility App',
+                description: 'Mobile application to connect patients with healthcare providers and provide telemedicine services in underserved areas.',
+                category: 'Healthcare',
+                tags: ['Healthcare', 'Mobile App', 'Telemedicine'],
+                author: demoUsers[0],
+                collaboration: {
+                    seekingCollaborators: false,
+                    requiredSkills: []
+                },
+                stats: {
+                    likes: [],
+                    comments: 2,
+                    views: 34
+                },
+                createdAt: new Date('2024-01-25')
+            }
+        ];
+        
+        function App() {
+            const [user, setUser] = useState(null);
+            const [token, setToken] = useState(localStorage.getItem('token'));
+            const [currentView, setCurrentView] = useState('home');
+            const [ideas, setIdeas] = useState(demoIdeas);
+            const [loading, setLoading] = useState(false);
+            const [error, setError] = useState('');
+            const [success, setSuccess] = useState('');
+
+            useEffect(() => {
+                if (token) {
+                    const savedUser = localStorage.getItem('user');
+                    if (savedUser) {
+                        setUser(JSON.parse(savedUser));
+                    }
+                }
+            }, [token]);
+
+            const handleLogin = (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const email = formData.get('email');
+                const password = formData.get('password');
+                
+                const demoUser = demoUsers.find(u => u.email === email && u.password === password);
+                
+                if (demoUser) {
+                    const token = 'demo-token-' + Date.now();
+                    localStorage.setItem('token', token);
+                    localStorage.setItem('user', JSON.stringify(demoUser));
+                    setToken(token);
+                    setUser(demoUser);
+                    setSuccess('Login successful!');
+                    setTimeout(() => setSuccess(''), 3000);
+                } else {
+                    setError('Invalid credentials. Use demo@example.com / demo123');
+                }
+            };
+
+            const handleRegister = (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const username = formData.get('username');
+                const email = formData.get('email');
+                const password = formData.get('password');
+                
+                const newUser = {
+                    _id: 'user' + (demoUsers.length + 1),
+                    username,
+                    email,
+                    password,
+                    profile: {
+                        bio: '',
+                        skills: []
+                    }
+                };
+                
+                demoUsers.push(newUser);
+                
+                const token = 'demo-token-' + Date.now();
+                localStorage.setItem('token', token);
+                localStorage.setItem('user', JSON.stringify(newUser));
+                setToken(token);
+                setUser(newUser);
+                setSuccess('Registration successful!');
+                setTimeout(() => setSuccess(''), 3000);
+            };
+
+            const handleLogout = () => {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                setToken(null);
+                setUser(null);
+                setSuccess('Logged out successfully!');
+                setTimeout(() => setSuccess(''), 3000);
+            };
+
+            const handleLikeIdea = (ideaId) => {
+                if (!user) {
+                    setError('Please login to like ideas');
+                    return;
+                }
+                
+                const ideaIndex = ideas.findIndex(i => i._id === ideaId);
+                if (ideaIndex !== -1) {
+                    const idea = ideas[ideaIndex];
+                    const likeIndex = idea.stats.likes.indexOf(user._id);
+                    
+                    if (likeIndex > -1) {
+                        idea.stats.likes.splice(likeIndex, 1);
+                    } else {
+                        idea.stats.likes.push(user._id);
+                    }
+                    
+                    setIdeas([...ideas]);
+                }
+            };
+
+            const renderNavigation = () => (
+                <nav className="nav">
+                    <div className="container">
+                        <div className="nav-content">
+                            <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#111827' }}>
+                                Innovation Hub
+                            </h1>
+                            <div className="nav-links">
+                                <button 
+                                    onClick={() => setCurrentView('home')}
+                                    className={`nav-link ${currentView === 'home' ? 'active' : ''}`}
+                                >
+                                    Home
+                                </button>
+                                {user && (
+                                    <>
+                                        <button 
+                                            onClick={() => setCurrentView('create')}
+                                            className={`nav-link ${currentView === 'create' ? 'active' : ''}`}
+                                        >
+                                            Post Idea
+                                        </button>
+                                        <button 
+                                            onClick={() => setCurrentView('messages')}
+                                            className={`nav-link ${currentView === 'messages' ? 'active' : ''}`}
+                                        >
+                                            💬 Messages
+                                        </button>
+                                        <button 
+                                            onClick={() => setCurrentView('collaboration')}
+                                            className={`nav-link ${currentView === 'collaboration' ? 'active' : ''}`}
+                                        >
+                                            🤝 Collaboration
+                                        </button>
+                                    </>
+                                )}
+                                {user ? (
+                                    <>
+                                        <span style={{ color: '#6b7280' }}>Welcome, {user.username}!</span>
+                                        <button onClick={handleLogout} className="btn btn-secondary">
+                                            Logout
+                                        </button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <button 
+                                            onClick={() => setCurrentView('login')}
+                                            className="btn btn-primary"
+                                        >
+                                            Login
+                                        </button>
+                                        <button 
+                                            onClick={() => setCurrentView('register')}
+                                            className="btn btn-secondary"
+                                        >
+                                            Register
+                                        </button>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </nav>
+            );
+
+            const renderLogin = () => (
+                <div className="container">
+                    <div className="card" style={{ maxWidth: '400px', margin: '0 auto' }}>
+                        <h2 style={{ marginBottom: '20px', textAlign: 'center' }}>Login</h2>
+                        <form onSubmit={handleLogin}>
+                            <div className="form-group">
+                                <label>Email</label>
+                                <input type="email" name="email" id="loginEmail" required />
+                            </div>
+                            <div className="form-group">
+                                <label>Password</label>
+                                <input type="password" name="password" id="loginPassword" required />
+                            </div>
+                            <button type="submit" className="btn btn-primary" style={{ width: '100%', marginBottom: '10px' }}>
+                                Login
+                            </button>
+                            <button 
+                                type="button"
+                                onClick={() => {
+                                    document.getElementById('loginEmail').value = 'demo@example.com';
+                                    document.getElementById('loginPassword').value = 'demo123';
+                                }}
+                                className="btn btn-secondary" 
+                                style={{ width: '100%' }}
+                            >
+                                🎯 Demo Login
+                            </button>
+                        </form>
+                        <p style={{ textAlign: 'center', marginTop: '15px' }}>
+                            Don't have an account?{' '}
+                            <button 
+                                onClick={() => setCurrentView('register')}
+                                style={{ background: 'none', border: 'none', color: '#14b8a6', cursor: 'pointer' }}
+                            >
+                                Register here
+                            </button>
+                        </p>
+                    </div>
+                </div>
+            );
+
+            const renderRegister = () => (
+                <div className="container">
+                    <div className="card" style={{ maxWidth: '400px', margin: '0 auto' }}>
+                        <h2 style={{ marginBottom: '20px', textAlign: 'center' }}>Register</h2>
+                        <form onSubmit={handleRegister}>
+                            <div className="form-group">
+                                <label>Username</label>
+                                <input type="text" name="username" required minLength="3" />
+                            </div>
+                            <div className="form-group">
+                                <label>Email</label>
+                                <input type="email" name="email" required />
+                            </div>
+                            <div className="form-group">
+                                <label>Password</label>
+                                <input type="password" name="password" required minLength="6" />
+                            </div>
+                            <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>
+                                Register
+                            </button>
+                        </form>
+                        <p style={{ textAlign: 'center', marginTop: '15px' }}>
+                            Already have an account?{' '}
+                            <button 
+                                onClick={() => setCurrentView('login')}
+                                style={{ background: 'none', border: 'none', color: '#3b82f6', cursor: 'pointer' }}
+                            >
+                                Login here
+                            </button>
+                        </p>
+                    </div>
+                </div>
+            );
+
+            const renderCreateIdea = () => {
+                const [formData, setFormData] = React.useState({
+                    title: '',
+                    description: '',
+                    category: 'Technology',
+                    tags: '',
+                    seekingCollaborators: false,
+                    requiredSkills: ''
+                });
+
+                const handleSubmit = (e) => {
+                    e.preventDefault();
+                    
+                    const newIdea = {
+                        _id: 'idea' + (ideas.length + 1),
+                        title: formData.title,
+                        description: formData.description,
+                        category: formData.category,
+                        tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
+                        author: user,
+                        collaboration: {
+                            seekingCollaborators: formData.seekingCollaborators,
+                            requiredSkills: formData.requiredSkills.split(',').map(skill => skill.trim()).filter(skill => skill)
+                        },
+                        stats: {
+                            likes: [],
+                            comments: 0,
+                            views: 0
+                        },
+                        createdAt: new Date()
+                    };
+                    
+                    ideas.unshift(newIdea);
+                    setIdeas([...ideas]);
+                    
+                    setSuccess('Idea posted successfully!');
+                    setFormData({
+                        title: '',
+                        description: '',
+                        category: 'Technology',
+                        tags: '',
+                        seekingCollaborators: false,
+                        requiredSkills: ''
+                    });
+                    setCurrentView('home');
+                    setTimeout(() => setSuccess(''), 3000);
+                };
+
+                return (
+                    <div className="container">
+                        <div className="card" style={{ maxWidth: '600px', margin: '0 auto' }}>
+                            <h2 style={{ marginBottom: '20px' }}>Share Your Innovation</h2>
+                            <form onSubmit={handleSubmit}>
+                                <div className="form-group">
+                                    <label>Title</label>
+                                    <input
+                                        type="text"
+                                        value={formData.title}
+                                        onChange={(e) => setFormData({...formData, title: e.target.value})}
+                                        required
+                                        maxLength="200"
+                                    />
+                                </div>
+                                
+                                <div className="form-group">
+                                    <label>Description</label>
+                                    <textarea
+                                        value={formData.description}
+                                        onChange={(e) => setFormData({...formData, description: e.target.value})}
+                                        required
+                                        maxLength="2000"
+                                    />
+                                </div>
+                                
+                                <div className="form-group">
+                                    <label>Category</label>
+                                    <select
+                                        value={formData.category}
+                                        onChange={(e) => setFormData({...formData, category: e.target.value})}
+                                    >
+                                        <option value="Technology">Technology</option>
+                                        <option value="Business">Business</option>
+                                        <option value="Education">Education</option>
+                                        <option value="Healthcare">Healthcare</option>
+                                        <option value="Environment">Environment</option>
+                                        <option value="Social Impact">Social Impact</option>
+                                        <option value="Arts & Culture">Arts & Culture</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                
+                                <div className="form-group">
+                                    <label>Tags (comma-separated)</label>
+                                    <input
+                                        type="text"
+                                        value={formData.tags}
+                                        onChange={(e) => setFormData({...formData, tags: e.target.value})}
+                                        placeholder="AI, Machine Learning, Innovation"
+                                    />
+                                </div>
+                                
+                                <div className="form-group">
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                        <input
+                                            type="checkbox"
+                                            checked={formData.seekingCollaborators}
+                                            onChange={(e) => setFormData({...formData, seekingCollaborators: e.target.checked})}
+                                        />
+                                        Seeking Collaborators
+                                    </label>
+                                </div>
+                                
+                                {formData.seekingCollaborators && (
+                                    <div className="form-group">
+                                        <label>Required Skills (comma-separated)</label>
+                                        <input
+                                            type="text"
+                                            value={formData.requiredSkills}
+                                            onChange={(e) => setFormData({...formData, requiredSkills: e.target.value})}
+                                            placeholder="React, Node.js, Design"
+                                        />
+                                    </div>
+                                )}
+                                
+                                <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>
+                                    Post Idea
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                );
+            };
+
+            const renderMessages = () => {
+                const [messages, setMessages] = React.useState([]);
+                const [newMessage, setNewMessage] = React.useState('');
+                const [selectedUser, setSelectedUser] = React.useState(null);
+
+                return (
+                    <div className="container">
+                        <div className="card" style={{ maxWidth: '800px', margin: '0 auto' }}>
+                            <h2 style={{ marginBottom: '20px' }}>💬 Messages</h2>
+                            <div style={{ marginBottom: '20px', paddingBottom: '20px', borderBottom: '1px solid #e5e7eb' }}>
+                                <label style={{ display: 'block', marginBottom: '10px', fontWeight: '500' }}>Send a message to user</label>
+                                <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+                                    <select 
+                                        value={selectedUser || ''}
+                                        onChange={(e) => setSelectedUser(e.target.value)}
+                                        style={{ flex: 1, padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                                    >
+                                        <option value="">Select a user...</option>
+                                        {demoUsers.map(u => (
+                                            <option key={u._id} value={u._id}>{u.username}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div style={{ display: 'flex', gap: '10px' }}>
+                                    <input
+                                        type="text"
+                                        value={newMessage}
+                                        onChange={(e) => setNewMessage(e.target.value)}
+                                        placeholder="Type your message..."
+                                        style={{ flex: 1, padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                                    />
+                                    <button 
+                                        onClick={() => {
+                                            if (selectedUser && newMessage) {
+                                                const msg = {
+                                                    _id: 'msg' + (messages.length + 1),
+                                                    from: user._id,
+                                                    to: selectedUser,
+                                                    content: newMessage,
+                                                    timestamp: new Date(),
+                                                    read: false
+                                                };
+                                                setMessages([...messages, msg]);
+                                                setNewMessage('');
+                                                setSuccess('Message sent!');
+                                                setTimeout(() => setSuccess(''), 3000);
+                                            }
+                                        }}
+                                        className="btn btn-primary"
+                                    >
+                                        Send
+                                    </button>
+                                </div>
+                            </div>
+                            <div>
+                                <h3 style={{ marginBottom: '15px' }}>Message History</h3>
+                                {messages.length === 0 ? (
+                                    <p style={{ color: '#6b7280' }}>No messages yet</p>
+                                ) : (
+                                    messages.map(msg => (
+                                        <div key={msg._id} style={{ 
+                                            padding: '15px', 
+                                            marginBottom: '10px', 
+                                            backgroundColor: msg.from === user._id ? '#ccfbf1' : '#f3f4f6',
+                                            borderRadius: '8px',
+                                            marginLeft: msg.from === user._id ? '50px' : '0',
+                                            marginRight: msg.from === user._id ? '0' : '50px'
+                                        }}>
+                                            <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '5px' }}>
+                                                {msg.from === user._id ? 'You' : demoUsers.find(u => u._id === msg.from)?.username || 'Unknown'} • {new Date(msg.timestamp).toLocaleTimeString()}
+                                            </div>
+                                            <div>{msg.content}</div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+            const renderCollaboration = () => {
+                const [requests, setRequests] = React.useState([]);
+                const [selectedIdea, setSelectedIdea] = React.useState('');
+                const [requestMessage, setRequestMessage] = React.useState('');
+                const [selectedUser, setSelectedUser] = React.useState('');
+
+                return (
+                    <div className="container">
+                        <div className="card" style={{ maxWidth: '800px', margin: '0 auto' }}>
+                            <h2 style={{ marginBottom: '20px' }}>🤝 Collaboration Requests</h2>
+                            <div style={{ marginBottom: '20px', paddingBottom: '20px', borderBottom: '1px solid #e5e7eb' }}>
+                                <label style={{ display: 'block', marginBottom: '10px', fontWeight: '500' }}>Send collaboration request</label>
+                                <div style={{ marginBottom: '10px' }}>
+                                    <select 
+                                        value={selectedIdea || ''}
+                                        onChange={(e) => setSelectedIdea(e.target.value)}
+                                        style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px', marginBottom: '10px' }}
+                                    >
+                                        <option value="">Select an idea...</option>
+                                        {ideas.map(idea => (
+                                            <option key={idea._id} value={idea._id}>{idea.title}</option>
+                                        ))}
+                                    </select>
+                                    <select 
+                                        value={selectedUser || ''}
+                                        onChange={(e) => setSelectedUser(e.target.value)}
+                                        style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px', marginBottom: '10px' }}
+                                    >
+                                        <option value="">Select a user...</option>
+                                        {demoUsers.map(u => (
+                                            <option key={u._id} value={u._id}>{u.username}</option>
+                                        ))}
+                                    </select>
+                                    <textarea
+                                        value={requestMessage}
+                                        onChange={(e) => setRequestMessage(e.target.value)}
+                                        placeholder="Why do you want to collaborate?"
+                                        style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px', minHeight: '80px' }}
+                                    />
+                                </div>
+                                <button 
+                                    onClick={() => {
+                                        if (selectedIdea && selectedUser && requestMessage) {
+                                            const req = {
+                                                _id: 'req' + (requests.length + 1),
+                                                from: user._id,
+                                                to: selectedUser,
+                                                ideaId: selectedIdea,
+                                                status: 'pending',
+                                                message: requestMessage,
+                                                createdAt: new Date()
+                                            };
+                                            setRequests([...requests, req]);
+                                            setRequestMessage('');
+                                            setSelectedIdea('');
+                                            setSelectedUser('');
+                                            setSuccess('Collaboration request sent!');
+                                            setTimeout(() => setSuccess(''), 3000);
+                                        }
+                                    }}
+                                    className="btn btn-primary"
+                                >
+                                    Send Request
+                                </button>
+                            </div>
+                            <div>
+                                <h3 style={{ marginBottom: '15px' }}>Your Requests</h3>
+                                {requests.length === 0 ? (
+                                    <p style={{ color: '#6b7280' }}>No collaboration requests yet</p>
+                                ) : (
+                                    requests.map(req => (
+                                        <div key={req._id} style={{ 
+                                            padding: '15px', 
+                                            marginBottom: '10px', 
+                                            backgroundColor: '#f3f4f6',
+                                            borderRadius: '8px',
+                                            border: '1px solid #e5e7eb'
+                                        }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                                                <div>
+                                                    <div style={{ fontWeight: '600', marginBottom: '5px' }}>
+                                                        Request to {demoUsers.find(u => u._id === req.to)?.username || 'Unknown'}
+                                                    </div>
+                                                    <div style={{ fontSize: '12px', color: '#6b7280' }}>
+                                                        Idea: {ideas.find(i => i._id === req.ideaId)?.title || 'Unknown'}
+                                                    </div>
+                                                </div>
+                                                <span style={{ 
+                                                    padding: '4px 12px', 
+                                                    borderRadius: '12px', 
+                                                    fontSize: '12px',
+                                                    backgroundColor: req.status === 'pending' ? '#fef3c7' : req.status === 'accepted' ? '#d1fae5' : '#fee2e2',
+                                                    color: req.status === 'pending' ? '#92400e' : req.status === 'accepted' ? '#065f46' : '#991b1b'
+                                                }}>
+                                                    {req.status}
+                                                </span>
+                                            </div>
+                                            <div style={{ marginBottom: '10px' }}>{req.message}</div>
+                                            <div style={{ fontSize: '12px', color: '#6b7280' }}>
+                                                {new Date(req.createdAt).toLocaleDateString()}
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+            const renderHome = () => (
+                <div className="container">
+                    <div style={{ marginBottom: '30px' }}>
+                        <h2 style={{ marginBottom: '10px' }}>Latest Innovations</h2>
+                        <p style={{ color: '#6b7280' }}>Discover and collaborate on amazing ideas</p>
+                    </div>
+                    
+                    {loading ? (
+                        <div className="loading">Loading ideas...</div>
+                    ) : (
+                        <div>
+                            {ideas.map(idea => (
+                                <div key={idea._id} className="idea-card">
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
+                                        <div>
+                                            <h3 className="idea-title">{idea.title}</h3>
+                                            <div className="user-info">
+                                                <div className="user-avatar">
+                                                    {idea.author?.username?.[0]?.toUpperCase() || 'U'}
+                                                </div>
+                                                <div>
+                                                    <div style={{ fontWeight: '500' }}>{idea.author?.username || 'Anonymous'}</div>
+                                                    <div style={{ fontSize: '12px', color: '#6b7280' }}>
+                                                        {new Date(idea.createdAt).toLocaleDateString()}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <span className="tag" style={{ backgroundColor: '#dbeafe', color: '#1e40af' }}>
+                                            {idea.category}
+                                        </span>
+                                    </div>
+                                    
+                                    <p className="idea-description">{idea.description}</p>
+                                    
+                                    {idea.tags && idea.tags.length > 0 && (
+                                        <div className="idea-tags">
+                                            {idea.tags.map((tag, index) => (
+                                                <span key={index} className="tag">{tag}</span>
+                                            ))}
+                                        </div>
+                                    )}
+                                    
+                                    {idea.collaboration?.seekingCollaborators && (
+                                        <div style={{ 
+                                            backgroundColor: '#f0fdf4', 
+                                            border: '1px solid #bbf7d0', 
+                                            borderRadius: '6px', 
+                                            padding: '10px', 
+                                            marginBottom: '15px' 
+                                        }}>
+                                            <span style={{ color: '#16a34a', fontWeight: '500' }}>
+                                                Seeking Collaborators
+                                            </span>
+                                            {idea.collaboration.requiredSkills && idea.collaboration.requiredSkills.length > 0 && (
+                                                <div style={{ marginTop: '5px', fontSize: '12px', color: '#059669' }}>
+                                                    Skills needed: {idea.collaboration.requiredSkills.join(', ')}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                    
+                                    <div className="idea-actions">
+                                        <button 
+                                            onClick={() => handleLikeIdea(idea._id)}
+                                            className={`action-btn ${idea.stats?.likes?.includes(user?._id) ? 'liked' : ''}`}
+                                        >
+                                            {idea.stats?.likes?.includes(user?._id) ? '' : ''} {idea.stats?.likes?.length || 0}
+                                        </button>
+                                        <button className="action-btn">
+                                             {idea.stats?.comments || 0}
+                                        </button>
+                                        <button className="action-btn">
+                                             {idea.stats?.views || 0}
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                            
+                            {ideas.length === 0 && (
+                                <div className="card" style={{ textAlign: 'center', padding: '40px' }}>
+                                    <h3>No ideas yet</h3>
+                                    <p style={{ color: '#6b7280', marginTop: '10px' }}>
+                                        Be the first to share an innovative idea!
+                                    </p>
+                                    {user && (
+                                        <button 
+                                            onClick={() => setCurrentView('create')}
+                                            className="btn btn-primary"
+                                            style={{ marginTop: '20px' }}
+                                        >
+                                            Post Your First Idea
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            );
+
+            return (
+                <div>
+                    {renderNavigation()}
+                    
+                    {error && (
+                        <div className="container">
+                            <div className="error">
+                                {error}
+                                <button 
+                                    onClick={() => setError('')}
+                                    style={{ background: 'none', border: 'none', float: 'right', cursor: 'pointer' }}
+                                >
+                                    ×
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                    
+                    {success && (
+                        <div className="container">
+                            <div className="success">
+                                {success}
+                                <button 
+                                    onClick={() => setSuccess('')}
+                                    style={{ background: 'none', border: 'none', float: 'right', cursor: 'pointer' }}
+                                >
+                                    ×
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                    
+                    {currentView === 'home' && renderHome()}
+                    {currentView === 'login' && renderLogin()}
+                    {currentView === 'register' && renderRegister()}
+                    {currentView === 'create' && user && renderCreateIdea()}
+                    {currentView === 'messages' && user && renderMessages()}
+                    {currentView === 'collaboration' && user && renderCollaboration()}
+                </div>
+            );
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
